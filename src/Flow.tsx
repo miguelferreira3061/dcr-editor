@@ -19,21 +19,20 @@ import useStore, { RFState } from "./store";
 
 import { useEffect, useRef, useState } from "react";
 
-import Condition from "./dcr-related/relations/Condition";
-import Response from "./dcr-related/relations/Response";
-import Include from "./dcr-related/relations/Include";
-import Exclude from "./dcr-related/relations/Exclude";
-import Milestone from "./dcr-related/relations/Milestone";
-import Spawn from "./dcr-related/relations/Spawn";
+import Condition from "./dcr-related/edges/Condition";
+import Response from "./dcr-related/edges/Response";
+import Include from "./dcr-related/edges/Include";
+import Exclude from "./dcr-related/edges/Exclude";
+import Milestone from "./dcr-related/edges/Milestone";
+import Spawn from "./dcr-related/edges/Spawn";
+import CustomConnectionLine from "./dcr-related/edges/ConnectionLine";
 
-import BaseEvent from "./dcr-related/events/BaseEvent";
-import Nest from "./dcr-related/groups/Nest";
-import Subprocess from "./dcr-related/groups/Subprocess";
+import BaseEvent from "./dcr-related/nodes/BaseEvent";
+import Nest from "./dcr-related/nodes/Nest";
+import Subprocess from "./dcr-related/nodes/Subprocess";
 
 import JsonDownload from "./components/json-download";
 import PngDownload from "./components/png-download";
-
-import CustomConnectionLine from "./dcr-related/relations/ConnectionLine";
 
 const selector = (state: RFState) => ({
   nodes: state.nodes,

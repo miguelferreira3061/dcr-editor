@@ -1,11 +1,11 @@
-import { EventModel } from "@/dcr-related/events/BaseEvent";
+import { EventModel } from "@/dcr-related/nodes/BaseEvent";
 
-import { ConditionModel } from "@/dcr-related/relations/Condition";
-import { ExcludeModel } from "@/dcr-related/relations/Exclude";
-import { IncludeModel } from "@/dcr-related/relations/Include";
-import { MilestoneModel } from "@/dcr-related/relations/Milestone";
-import { ResponseModel } from "@/dcr-related/relations/Response";
-import { SpawnModel } from "@/dcr-related/relations/Spawn";
+import { ConditionModel } from "@/dcr-related/edges/Condition";
+import { ExcludeModel } from "@/dcr-related/edges/Exclude";
+import { IncludeModel } from "@/dcr-related/edges/Include";
+import { MilestoneModel } from "@/dcr-related/edges/Milestone";
+import { ResponseModel } from "@/dcr-related/edges/Response";
+import { SpawnModel } from "@/dcr-related/edges/Spawn";
 
 import useStore, { RFState } from "@/store";
 import { shallow } from "zustand/shallow";
