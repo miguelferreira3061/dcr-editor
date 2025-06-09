@@ -1,4 +1,6 @@
+import { Role } from "@/stores/roles-state";
 import { Node, Edge } from "@xyflow/react";
+import { splitArray } from "./utils";
 
 const relationsMap: { [rel: string]: string } = {
   condition: "-->*",
@@ -9,13 +11,16 @@ const relationsMap: { [rel: string]: string } = {
   spawn: "-->>",
 };
 
-type InputType =
+export type InputType =
   | { type: string }
   | { type: "Record"; record: { var: string; type: string }[] };
 
-type MarkingType = { included: boolean; pending: boolean };
+export type MarkingType = {
+  included: boolean;
+  pending: boolean;
+};
 
-type EventType = {
+export type EventType = {
   id: string;
   label: string;
   name: string;
@@ -28,7 +33,7 @@ type EventType = {
   parent?: string;
 };
 
-type SubprocessType = {
+export type SubprocessType = {
   id: string;
   label: string;
   children: string[];
@@ -36,36 +41,26 @@ type SubprocessType = {
   parent?: string;
 };
 
-type NestType = SubprocessType & {
+export type NestType = SubprocessType & {
   nestType: string;
 };
 
-type RelationType = {
+export interface RelationType {
   id: string;
   source: string;
   target: string;
   type: string;
   parent?: string;
   guard?: string;
-};
+}
 
-type Process = {
+interface Process {
   events: EventType[];
   relations: RelationType[];
   nests?: NestType[];
   subprocesses?: SubprocessType[];
   parentProcess: string;
-};
-
-type RoleType = {
-  role: string;
-  label: string;
-  types: {
-    var: string;
-    type: string;
-  }[];
-  participants: string[];
-};
+}
 
 function extractData(nodes: Node[], edges: Edge[]) {
   let parentProcess = new Map<string, Process>();
@@ -73,9 +68,14 @@ function extractData(nodes: Node[], edges: Edge[]) {
   const events: EventType[] = nodes
     .filter((n) => n.type === "event")
     .map((n) => {
-      const { id, data } = n as {
+      const {
+        id,
+        data,
+        parentId: parent,
+      } = n as {
         id: string;
         data: Record<string, unknown>;
+        parentId: string;
       };
 
       const {
@@ -87,7 +87,6 @@ function extractData(nodes: Node[], edges: Edge[]) {
         initiators,
         receivers,
         marking,
-        parent,
       } = data as EventType;
 
       return {
@@ -107,8 +106,12 @@ function extractData(nodes: Node[], edges: Edge[]) {
   const nests: NestType[] = nodes
     .filter((n) => n.type === "nest")
     .map((n) => {
-      const { id, data } = n as { id: string; data: Record<string, unknown> };
-      const { label, children, marking, nestType, parent } = data as NestType;
+      const {
+        id,
+        data,
+        parentId: parent,
+      } = n as { id: string; data: Record<string, unknown>; parentId: string };
+      const { label, children, marking, nestType } = data as NestType;
 
       return {
         id,
@@ -123,8 +126,12 @@ function extractData(nodes: Node[], edges: Edge[]) {
   const subprocesses: SubprocessType[] = nodes
     .filter((n) => n.type === "subprocess")
     .map((n) => {
-      const { id, data } = n as { id: string; data: Record<string, unknown> };
-      const { label, children, marking, parent } = data as SubprocessType;
+      const {
+        id,
+        data,
+        parentId: parent,
+      } = n as { id: string; data: Record<string, unknown>; parentId: string };
+      const { label, children, marking } = data as SubprocessType;
 
       return {
         id,
@@ -217,16 +224,101 @@ function extractData(nodes: Node[], edges: Edge[]) {
   return parentProcess;
 }
 
+export function modifyRepresentation(
+  code: string,
+  eventMap: Map<string, string>
+): Map<string, EventType> {
+  let newEventMap = new Map<string, EventType>();
+  const splitted = code.replace(/[\r\t]/g, "").split("\n");
+  console.log(splitted, splitArray(splitted, ";"));
+  const events = splitted.filter((elem) => elem.charAt(0) === "(");
+
+  let i = 0;
+  eventMap.forEach((ev, id) => {
+    const event = events[i];
+    let marking: MarkingType = {
+      included: event.includes("%") ? false : true,
+      pending: event.includes("!") ? true : false,
+    };
+
+    const eventSplitted = event
+      .replace("; ", ";")
+      .replace(", ", ",")
+      .split(" ");
+
+    console.log(eventSplitted);
+
+    const labelName = eventSplitted[0]
+      .replace("(", "")
+      .replace(")", "")
+      .split(":");
+    const label = labelName[0];
+    const name = labelName[1];
+
+    const security = eventSplitted[1].replace("(", "").replace(")", "");
+
+    let expression: string | undefined = undefined;
+    let input: InputType | undefined = undefined;
+    const inputCompt = eventSplitted[2].replace("[", "").replace("]", "");
+    if (inputCompt.charAt(0) === "?") {
+      if (inputCompt === "?") input = { type: "Unit" };
+      else {
+        const inputString = inputCompt.replace("?:", "");
+        if (inputString.charAt(0) === "{") {
+          const inputRecord = inputString.replace("{", "").replace("}", "");
+          const recFields = inputRecord.split(";").map((rec) => {
+            const recField = rec.split(":");
+            return {
+              var: recField[0],
+              type: recField[1],
+            };
+          });
+          input = { type: "Record", record: recFields };
+        } else input = { type: inputString };
+      }
+    } else expression = inputCompt;
+
+    let initiatorsString = eventSplitted[3];
+    let initiators: string[] = [];
+    let receivers: string[] = [];
+    if (initiatorsString.includes("]"))
+      initiators = initiatorsString
+        .replace("[", "")
+        .replace("]", "")
+        .split(",");
+    else {
+      initiators = initiatorsString.replace("[", "").split(",");
+      receivers = eventSplitted[5].replace("]", "").split(",");
+    }
+
+    newEventMap.set(id, {
+      id: "",
+      label,
+      name,
+      security,
+      ...(input ? { input } : { expression }),
+      initiators,
+      ...(receivers.length > 0 && { receivers }),
+      marking,
+    });
+    i++;
+  });
+
+  return newEventMap;
+}
+
 export default function writeCode(
   nodes: Node[],
   edges: Edge[],
-  roles: RoleType[],
+  roles: Role[],
   lattice: string
-): string {
+): { eventMap: Map<string, string>; code: string } {
   const parentProcess = extractData(nodes, edges);
+  let eventMap = new Map<string, string>();
   let content: string[] = [];
 
-  function writeProcess(process: Process, sub: boolean) {
+  function writeProcess(process: Process, numTabs: number): string[] {
+    let newContent: string[] = [];
     process.events.forEach((e) => {
       const { included, pending } = e.marking;
       let eventContent = `${included ? "" : "%"}${pending ? "!" : ""}(${
@@ -254,24 +346,39 @@ export default function writeCode(
         e.receivers ? ` -> ${e.receivers.join(", ")}]` : "]"
       }`;
 
-      content.push(`${sub ? "\t" : ""}${eventContent}`);
+      eventMap.set(e.id, eventContent);
+      newContent.push(eventContent);
     });
-    content.push(`${sub ? "\t;" : ";"}`);
+    newContent.push(";");
 
     process.relations.forEach((r) => {
       if (r.type === "spawn") {
-        content.push(`${sub ? "\t" : ""}${r.source} ${relationsMap[r.type]} {`);
+        newContent.push(`${r.source} ${relationsMap[r.type]} {`);
         const childProcess = parentProcess.get(r.target);
-        if (childProcess) writeProcess(childProcess, true);
-        content.push(`${sub ? "\t}" : "}"}`);
+        if (childProcess) {
+          let i = 0;
+          let tabs = "";
+          while (i < numTabs) {
+            tabs += "\t";
+            i++;
+          }
+
+          newContent.push(
+            `\t${writeProcess(childProcess, numTabs + 1).join(`\n${tabs}`)}`
+          );
+
+          newContent.push("}");
+        }
       } else {
-        content.push(
-          `${sub ? "\t" : ""}${r.source} ${relationsMap[r.type]} ${r.target}${
+        newContent.push(
+          `${r.source} ${relationsMap[r.type]} ${r.target}${
             r.guard ? ` [${r.guard}]` : ""
           }`
         );
       }
     });
+
+    return newContent;
   }
 
   roles.forEach((role) => {
@@ -292,7 +399,7 @@ export default function writeCode(
   content.push(";");
 
   const globalProcess = parentProcess.get("global");
-  if (globalProcess) writeProcess(globalProcess, false);
+  if (globalProcess) content.push(writeProcess(globalProcess, 1).join("\n"));
 
-  return content.join("\n");
+  return { eventMap, code: content.join(`\n`) };
 }

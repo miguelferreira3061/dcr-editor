@@ -1,5 +1,5 @@
-import writeCode from "@/lib/codegen";
-import useStore, { RFState } from "@/store";
+import writeCode, { InputType, modifyRepresentation } from "@/lib/codegen";
+import useStore, { RFState } from "@/stores/store";
 import { shallow } from "zustand/shallow";
 
 import Editor from "@monaco-editor/react";
@@ -11,13 +11,23 @@ const selector = (state: RFState) => ({
   security: state.security,
   code: state.code,
   setCode: state.setCode,
+  eventMap: state.eventMap,
+  setEventMap: state.setEventMap,
+  updateNodeInfo: state.updateNodeInfo,
 });
 
 export default function CodeMenu() {
-  const { nodes, edges, rolesParticipants, security, code, setCode } = useStore(
-    selector,
-    shallow
-  );
+  const {
+    nodes,
+    edges,
+    rolesParticipants,
+    security,
+    code,
+    setCode,
+    eventMap,
+    setEventMap,
+    updateNodeInfo,
+  } = useStore(selector, shallow);
 
   const downloadCode = () => {
     const blob = new Blob([code], { type: "text/plain" });
@@ -36,17 +46,22 @@ export default function CodeMenu() {
   };
 
   return (
-    <div className="w-[calc(100%-4px)] p-2 flex flex-col items-center justify-center gap-2">
+    <div
+      className="w-[calc(100%-4px)] overflow-y-auto p-2 flex flex-col items-center justify-center gap-2"
+      style={{ height: "calc(100vh - 50px)" }}
+    >
       <label className="text-lg font-bold">Code</label>
       <Editor
-        className="w-full h-[700px]"
-        defaultLanguage="java"
+        className="w-full h-[500px]"
+        defaultLanguage="python"
         value={code}
-        loading={false}
         options={{
           minimap: { enabled: false },
           fontSize: 16,
           scrollBeyondLastLine: false,
+        }}
+        onChange={(newCode) => {
+          if (newCode) setCode(newCode);
         }}
       />
       {/*<textarea
@@ -57,12 +72,34 @@ export default function CodeMenu() {
       <div className="flex gap-2 w-full">
         <button
           className="bg-black h-8 w-full rounded-sm cursor-pointer font-semibold text-white hover:opacity-75"
-          onClick={() =>
-            setCode(writeCode(nodes, edges, rolesParticipants, security))
-          }
+          onClick={() => {
+            const { eventMap, code } = writeCode(
+              nodes,
+              edges,
+              rolesParticipants,
+              security
+            );
+            setEventMap(eventMap);
+            setCode(code);
+          }}
         >
           Generate Code
         </button>
+        {/*}
+        <button
+          className="bg-black h-8 w-full rounded-sm cursor-pointer font-semibold text-white hover:opacity-75"
+          onClick={() => {
+            if (code) {
+              const events = modifyRepresentation(code, eventMap);
+              events.forEach((ev, id) => {
+                updateNodeInfo(id, ev);
+              });
+            }
+          }}
+        >
+          Save Changes
+        </button>
+        */}
         <button
           className="bg-black h-8 w-full rounded-sm cursor-pointer font-semibold text-white hover:opacity-75"
           onClick={() => {

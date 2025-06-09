@@ -8,6 +8,18 @@ import {
 
 import "@/dcr-related/CustomHandles.css";
 
+export const NestModel = ({ onDragStart }: { onDragStart: any }) => {
+  return (
+    <div
+      className="h-[100px] w-[100px] border-black border-1 border-dashed"
+      onDragStart={onDragStart}
+      draggable
+    >
+      <div className="flex p-1 mt-[-8px] font-bold">n</div>
+    </div>
+  );
+};
+
 /**
  * `Nest` component for rendering a node with a dashed border and handles.
  * It displays a label, an algorithm type indicator, and a pending indicator.

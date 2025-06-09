@@ -1,4 +1,4 @@
-import useStore, { RFState } from "@/store";
+import useStore, { RFState } from "@/stores/store";
 import { shallow } from "zustand/shallow";
 
 const selector = (state: RFState) => ({
@@ -20,40 +20,14 @@ export default function JsonDownload() {
 
   const onClick = () => {
     const nodesForJson = nodes.map((node) => {
-      const { id, type, data } = node;
-      const initiators = data.initiators as string[];
-      const receivers = data.receivers as string[];
+      const { id, type, parentId, data } = node;
 
-      if (initiators) {
-        if (receivers) {
-          return {
-            id,
-            type,
-            data: {
-              ...data,
-              initiators,
-              receivers,
-            },
-          };
-        } else {
-          return {
-            id,
-            type,
-            data: {
-              ...data,
-              initiators,
-            },
-          };
-        }
-      } else {
-        return {
-          id,
-          type,
-          data: {
-            ...data,
-          },
-        };
-      }
+      return {
+        id,
+        type,
+        parentId,
+        data,
+      };
     });
 
     const edgesForJson = edges.map((edge) => {

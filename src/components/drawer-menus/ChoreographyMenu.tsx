@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import useStore, { RFState } from "@/store";
+import useStore, { RFState } from "@/stores/store";
 import { shallow } from "zustand/shallow";
 
 import { Workflow } from "lucide-react";
@@ -146,7 +146,11 @@ export default function ChoreographyMenu() {
           <button
             onClick={() => {
               if (roleAdd && roleAbbrv) {
-                addRole(roleAdd, roleAbbrv, roleTypes ?? []);
+                addRole({
+                  role: roleAdd,
+                  label: roleAbbrv,
+                  types: roleTypes ?? [],
+                });
                 setRoleAdd("");
                 setRoleAbbrv("");
                 setRoleTypes([]);
@@ -191,6 +195,8 @@ export default function ChoreographyMenu() {
     );
   };
 
+  {
+    /*
   const ParticipantMenu = () => {
     const [roleAdd, setRoleAdd] = useState(roles[0]);
     const [roleTypes, setRoleTypes] = useState(() => {
@@ -306,7 +312,7 @@ export default function ChoreographyMenu() {
                 roleTypes.length ===
                 roleTypes.filter((rlType) => rlType.input).length
               ) {
-                addParticipant(roleAdd, roleTypes ?? []);
+                addParticipant({ role: roleAdd, inputs: roleTypes ?? [] });
                 setParticipantMenuOpen(false);
                 setRoleAdd(roles[0]);
               }
@@ -373,6 +379,8 @@ export default function ChoreographyMenu() {
       </>
     );
   };
+  */
+  }
 
   return (
     <div
@@ -416,33 +424,36 @@ export default function ChoreographyMenu() {
             }}
           />
         </div>
-        <div className="flex gap-2 justify-end">
+        <div className="flex gap-2 justify-end w-full">
           <button
             onClick={() => {
               setRoleMenuOpen(!roleMenuOpen);
               setParticipantMenuOpen(false);
             }}
-            className="bg-black h-8 w-1/2 rounded-sm cursor-pointer font-semibold text-white hover:opacity-75"
+            className="bg-black h-8 w-full rounded-sm cursor-pointer font-semibold text-white hover:opacity-75"
           >
             Roles
           </button>
+          {/*
           <button
             onClick={() => {
               setParticipantMenuOpen(!participantMenuOpen);
               setRoleMenuOpen(false);
             }}
-            className="bg-black h-8 w-1/2 rounded-sm cursor-pointer font-semibold text-white hover:opacity-75"
+            className="bg-black h-8 w-full rounded-sm cursor-pointer font-semibold text-white hover:opacity-75"
           >
             Participants
           </button>
+          */}
         </div>
       </div>
 
       {/* ROLE MENU */}
       {roleMenuOpen && <RoleMenu />}
 
-      {/* PARTICIPANT MENU */}
+      {/* PARTICIPANT MENU 
       {participantMenuOpen && <ParticipantMenu />}
+      */}
     </div>
   );
 }

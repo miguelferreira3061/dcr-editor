@@ -1,4 +1,4 @@
-import useStore, { RFState } from "@/store";
+import useStore, { RFState } from "@/stores/store";
 import { shallow } from "zustand/shallow";
 
 import { getNodesBounds, getViewportForBounds } from "@xyflow/react";

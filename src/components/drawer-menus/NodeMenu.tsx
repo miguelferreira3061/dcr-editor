@@ -1,11 +1,12 @@
 import { useState } from "react";
 
-import useStore, { RFState } from "@/store";
+import useStore, { RFState } from "@/stores/store";
 import { shallow } from "zustand/shallow";
 
 import { SquareMousePointer } from "lucide-react";
 
 import { Node } from "@xyflow/react";
+import { InputType, MarkingType } from "@/lib/codegen";
 
 const selector = (state: RFState) => ({
   nodes: state.nodes,
@@ -14,14 +15,9 @@ const selector = (state: RFState) => ({
   updateNode: state.updateNode,
 });
 
-const inputTypes = [
-  "Integer",
-  "String",
-  "Boolean",
-  "Record",
-  "Reference",
-  "Unit",
-];
+const simpleInputTypes = ["Integer", "String", "Boolean"];
+
+const inputTypes = [...simpleInputTypes, "Record", "Unit"]; // "Reference" type not considered yet
 
 /**
  * Component that shows the selected node properties.
@@ -32,9 +28,9 @@ export const NodeMenu = ({ node }: { node: Node }) => {
     selector,
     shallow
   );
-  const { id, data } = node;
+  const { id, data, parentId } = node;
 
-  const marking = data.marking as Record<string, boolean>;
+  const marking = data.marking as MarkingType;
 
   const [initiators, setInitiators] = useState(data.initiators as string[]);
   const [receivers, setReceivers] = useState(data.receivers as string[]);
@@ -43,19 +39,13 @@ export const NodeMenu = ({ node }: { node: Node }) => {
   const [name, setName] = useState(data.name as string);
   const [included, setIncluded] = useState(marking.included as boolean);
   const [pending, setPending] = useState(marking.pending as boolean);
-  const [parent, setParent] = useState(data.parent as string);
+  const [parent, setParent] = useState(parentId as string);
   const [security, setSecurity] = useState(data.security as string);
-
-  const [input, setInput] = useState(
-    data.input as
-      | { type: string }
-      | { type: "Record"; record: { var: string; type: string }[] }
-  );
+  const [input, setInput] = useState(data.input as InputType);
   const [recordField, setRecordField] = useState({
     var: "",
     type: inputTypes[0],
   });
-
   const [expression, setExpression] = useState(
     (data.expression as string) ?? ""
   );
@@ -72,15 +62,11 @@ export const NodeMenu = ({ node }: { node: Node }) => {
       pending,
     },
     ...(type === "i" ? { input } : { expression }),
-    parent,
     security,
   };
 
   return (
-    <div
-      className="flex flex-col mr-4 overflow-y-auto"
-      style={{ height: "calc(100vh - 50px)" }}
-    >
+    <div className="flex flex-col mr-4 gap-1 h-[94vh] w-[calc(100%-6px)] overflow-y-auto">
       {/* NODE WITH RESPECTIVE ID */}
       <div className="flex items-center gap-5 p-4 border-b-2 border-[#CCCCCC]">
         <SquareMousePointer size={40} />
@@ -94,7 +80,7 @@ export const NodeMenu = ({ node }: { node: Node }) => {
       </div>
 
       {/* NODE PROPERTIES */}
-      <div className="flex flex-col p-3 gap-3 border-b-2 border-[#CCCCCC] ">
+      <div className="flex flex-col p-3 gap-2 border-b-2 border-[#CCCCCC] overflow-y-auto h-full">
         {/* INITIATORS */}
         <div className="grid grid-cols-3 items-center gap-4">
           <label>Initiators</label>
@@ -200,6 +186,7 @@ export const NodeMenu = ({ node }: { node: Node }) => {
             value={parent as string}
             onChange={(event) => {
               const value = event.target.value;
+              console.log(value);
               setParent(value);
             }}
           >
@@ -210,8 +197,7 @@ export const NodeMenu = ({ node }: { node: Node }) => {
                   {n.data.label as string}
                 </option>
               ))}
-            <option value="">None</option>
-            <option value="new">New Parent</option>
+            <option value={""}>-</option>
           </select>
         </div>
 
@@ -272,13 +258,11 @@ export const NodeMenu = ({ node }: { node: Node }) => {
                     setRecordField((prev) => ({ ...prev, type: value }));
                   }}
                 >
-                  {inputTypes
-                    .filter((_, index) => index !== 5 && index != 3)
-                    .map((type, index) => (
-                      <option key={index} value={type}>
-                        {type}
-                      </option>
-                    ))}
+                  {simpleInputTypes.map((type, index) => (
+                    <option key={index} value={type}>
+                      {type}
+                    </option>
+                  ))}
                 </select>
                 <button
                   className="bg-black h-8 col-span-3 rounded-sm cursor-pointer font-semibold text-white hover:opacity-75"
@@ -353,16 +337,27 @@ export const NodeMenu = ({ node }: { node: Node }) => {
             ></textarea>
           </>
         )}
-
-        {/* SAVE CHANGES BUTTON */}
+      </div>
+      {/* SAVE CHANGES BUTTON */}
+      <div className="flex justify-center m-2">
         <button
-          className="bg-black h-8 w-full rounded-sm cursor-pointer font-semibold text-white hover:opacity-75"
+          className="bg-black min-h-8 w-full rounded-sm cursor-pointer font-semibold text-white hover:opacity-75"
           type="button"
           onClick={() => {
-            const newNode = { ...node, data: newData, selected: true };
+            const newNode: Node = {
+              ...node,
+              data: newData,
+              selected: true,
+              ...(parent
+                ? {
+                    parentId: parent,
+                    expandParent: true,
+                    extent: "parent",
+                  }
+                : { parentId: "" }),
+            };
             updateNode(id, newNode);
             setSelectedElement(newNode);
-            log(`Node ${id} updated.`);
           }}
         >
           Save Changes

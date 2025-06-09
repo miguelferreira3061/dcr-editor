@@ -3,7 +3,7 @@ import { MoveRight } from "lucide-react";
 import { Edge } from "@xyflow/react";
 import { useState } from "react";
 
-import useStore, { RFState } from "@/store";
+import useStore, { RFState } from "@/stores/store";
 import { shallow } from "zustand/shallow";
 
 const selector = (state: RFState) => ({

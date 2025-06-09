@@ -7,7 +7,7 @@ import { MilestoneModel } from "@/dcr-related/edges/Milestone";
 import { ResponseModel } from "@/dcr-related/edges/Response";
 import { SpawnModel } from "@/dcr-related/edges/Spawn";
 
-import useStore, { RFState } from "@/store";
+import useStore, { RFState } from "@/stores/store";
 import { shallow } from "zustand/shallow";
 
 import { ReactNode, useState } from "react";
@@ -15,10 +15,13 @@ import { ReactNode, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
 import { ChevronLeft } from "lucide-react";
+import { NestModel } from "@/dcr-related/nodes/Nest";
+import { SubprocessModel } from "@/dcr-related/nodes/Subprocess";
 
 const selector = (state: RFState) => ({
   setEventType: state.setEventType,
   setRelationType: state.setRelationType,
+  setSubgraphType: state.setSubgraphType,
 });
 
 /**
@@ -35,7 +38,10 @@ interface RelationProps {
  * @returns tool pallete component.
  */
 export default function ToolPallete() {
-  const { setEventType, setRelationType } = useStore(selector, shallow);
+  const { setEventType, setRelationType, setSubgraphType } = useStore(
+    selector,
+    shallow
+  );
 
   /**
    * Sets the event type for the drag and drop event.
@@ -43,7 +49,8 @@ export default function ToolPallete() {
    * @param type - The type of the event.
    */
   const onDragStart = (event: any, type: string) => {
-    setEventType(type);
+    if (type.length === 1) setEventType(type);
+    else setSubgraphType(type);
     event.dataTransfer.effectAllowed = "move";
   };
 
@@ -108,8 +115,20 @@ export default function ToolPallete() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className="flex flex-col gap-5 absolute right-12 items-center"
+              className="flex flex-col gap-5 mr-5 items-center"
             >
+              <div className="flex gap-5">
+                <NestModel
+                  onDragStart={(event: any) => {
+                    onDragStart(event, "nest");
+                  }}
+                />
+                <SubprocessModel
+                  onDragStart={(event: any) => {
+                    onDragStart(event, "subprocess");
+                  }}
+                />
+              </div>
               {/* EVENTS FOR DND */}
               <div className="flex gap-5">
                 <EventModel

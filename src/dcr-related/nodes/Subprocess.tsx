@@ -7,6 +7,21 @@ import {
 } from "@xyflow/react";
 
 import "@/dcr-related/CustomHandles.css";
+import { BaseNode } from "@/components/base-node";
+
+export const SubprocessModel = ({ onDragStart }: { onDragStart: any }) => {
+  return (
+    <>
+      <div
+        className="h-[100px] w-[100px] border-black border-1 border-dashed"
+        onDragStart={onDragStart}
+        draggable
+      >
+        <div className="flex p-1 mt-[-8px] font-bold">s</div>
+      </div>
+    </>
+  );
+};
 
 /**
  * Subprocess node component similar to a [`Nest`](./Nest.tsx) node.
@@ -22,8 +37,8 @@ export default function Subprocess(props: NodeProps) {
   return (
     <>
       {/* SUBPROCESS */}
-      <div
-        className={`relative w-full h-full border-dashed border-1 border-black`}
+      <BaseNode
+        className={`relative w-full h-full border-dashed border-1 rounded-none bg-transparent border-black`}
       >
         {/* SUBPROCESS NODE RESIZER */}
         <NodeResizer
@@ -56,7 +71,7 @@ export default function Subprocess(props: NodeProps) {
             isConnectableStart={false}
           />
         )}
-      </div>
+      </BaseNode>
     </>
   );
 }

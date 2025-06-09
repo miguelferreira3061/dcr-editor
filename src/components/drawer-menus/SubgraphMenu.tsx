@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Group } from "lucide-react";
 
 import { Node } from "@xyflow/react";
-import useStore, { RFState } from "@/store";
+import useStore, { RFState } from "@/stores/store";
 
 const selector = (state: RFState) => ({
   nodes: state.nodes,
@@ -12,6 +12,7 @@ const selector = (state: RFState) => ({
   addEdge: state.addEdge,
   edges: state.edges,
   setEdges: state.setEdges,
+  getFamily: state.getFamily,
 });
 
 /**
@@ -27,37 +28,42 @@ export const SubgraphMenu = ({ nest }: { nest: Node }) => {
     addEdge,
     edges,
     setEdges,
+    getFamily,
   } = useStore(selector);
-  const { id, data } = nest;
+  const { id, data, parentId } = nest;
 
-  const { children, marking } = data as {
-    children: string[];
-    marking: Record<string, boolean>;
-  };
+  const { marking } = data as { marking: Record<string, boolean> };
 
   const [type, setType] = useState(nest.type as string);
   const [label, setLabel] = useState(data.label as string);
   const [included, setIncluded] = useState(marking.included as boolean);
   const [pending, setPending] = useState(marking.pending as boolean);
   const [nestType, setNestType] = useState(data.nestType as string);
-  const [parent, setParent] = useState(data.parent as string);
+  const [parent, setParent] = useState(parentId as string);
   const newData = {
     label,
-    children: data.children,
     nestType,
     marking: {
       included,
       pending,
     },
-    parent,
   };
 
+  const family = getFamily(id);
+
   const onClick = () => {
-    updateNode(id, { ...getNode(id), type, data: newData });
-    const children = data.children as string[];
-    children.forEach((childId: string) => {
-      const child = getNode(childId);
-      updateNode(childId, {
+    updateNode(id, {
+      ...getNode(id),
+      type,
+      data: newData,
+      ...(parent
+        ? { parentId: parent, expandParent: true, extent: "parent" }
+        : { parentId: "" }),
+    });
+    const children = nodes.filter((nd) => nd.parentId && nd.parentId === id);
+
+    children.forEach((child) => {
+      updateNode(child.id, {
         ...child,
         selected: false,
         data: {
@@ -70,12 +76,12 @@ export const SubgraphMenu = ({ nest }: { nest: Node }) => {
       });
       if (type === "nest") {
         if (nestType === "choice") {
-          children.forEach((otherChildId: string) => {
+          children.forEach((otherChild) => {
             addEdge({
-              id: "e-" + childId + "-" + otherChildId,
+              id: "e-" + child.id + "-" + otherChild.id,
               type: "exclude",
-              source: childId,
-              target: otherChildId,
+              source: child.id,
+              target: otherChild.id,
               hidden: true,
               data: {
                 parent: id,
@@ -167,18 +173,15 @@ export const SubgraphMenu = ({ nest }: { nest: Node }) => {
           >
             {nodes
               .filter(
-                (n) =>
-                  n.id !== id &&
-                  (n.type === "nest" || n.type === "subprocess") &&
-                  !children.includes(n.id)
+                (nd) =>
+                  nd.type !== "event" && !family.includes(nd.id) && nd.id !== id
               )
               .map((n) => (
                 <option key={n.id} value={n.id}>
                   {n.data.label as string}
                 </option>
               ))}
-            <option value="">None</option>
-            <option value="new">New Parent</option>
+            <option value="">-</option>
           </select>
         </div>
 

@@ -8,7 +8,7 @@ import {
 import { useRef, useState } from "react";
 
 import { getEdgeParams } from "@/lib/utils";
-import useStore, { RFState } from "@/store";
+import useStore, { RFState } from "@/stores/store";
 
 const selector = (state: RFState) => ({
   simulationFlow: state.simulationFlow,
@@ -144,10 +144,22 @@ export default function BaseRelation({
                   { snapToGrid: false }
                 );
 
+                const allPointsX =
+                  pointsArr.filter((pt) => pt.x === pointsArr[0].x).length ===
+                  pointsArr.length;
+                const allPointsY =
+                  pointsArr.filter((pt) => pt.y === pointsArr[0].y).length ===
+                  pointsArr.length;
                 if (e.shiftKey) {
-                  pointsArr.forEach((pt) => {
-                    pt.y = Math.trunc(newPoint.y);
-                  });
+                  if (allPointsX) {
+                    pointsArr.forEach((pt) => {
+                      pt.x = Math.trunc(newPoint.x);
+                    });
+                  } else if (allPointsY) {
+                    pointsArr.forEach((pt) => {
+                      pt.y = Math.trunc(newPoint.y);
+                    });
+                  }
                 } else {
                   pointsArr[index] = {
                     x: Math.trunc(newPoint.x),

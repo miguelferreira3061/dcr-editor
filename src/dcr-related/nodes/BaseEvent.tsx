@@ -3,7 +3,7 @@ import { Handle, NodeProps, Position, useConnection } from "@xyflow/react";
 import { Check } from "lucide-react";
 
 import "@/dcr-related/CustomHandles.css";
-import useStore, { RFState } from "@/store";
+import useStore, { RFState } from "@/stores/store";
 
 const selector = (state: RFState) => ({
   simulationFlow: state.simulationFlow,

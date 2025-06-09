@@ -1,6 +1,6 @@
 import { type Node, type Edge, isNode } from "@xyflow/react";
 
-import useStore, { RFState } from "@/store";
+import useStore, { RFState } from "@/stores/store";
 import { shallow } from "zustand/shallow";
 
 import { useState } from "react";
@@ -29,13 +29,14 @@ export default function Drawer() {
   const [open, setOpen] = useState(false);
   const [selectedLogs, setSelectedLogs] = useState(false);
   const [selectedCode, setSelectedCode] = useState(false);
+  const [width, setWidth] = useState("25%");
 
   return (
     <>
       {/* DRAWER */}
       <motion.div
         initial={{ width: 16 }}
-        animate={{ width: open ? "25%" : 16 }}
+        animate={{ width: open ? width : 16 }}
         exit={{ width: 16 }}
         transition={{ duration: 0.2, ease: "easeInOut" }}
         className="absolute h-full right-0 bg-[#D9D9D9] drop-shadow-lg border-l-2 border-[#CCCCCC] overflow-hidden"
@@ -69,6 +70,7 @@ export default function Drawer() {
                   className="cursor-pointer w-1/3 p-2 border-r-2 border-[#CCCCCC] justify-center flex items-center"
                   onClick={() => {
                     setSelectedLogs(false);
+                    setWidth("25%");
                     setSelectedCode(false);
                   }}
                 >
@@ -78,6 +80,7 @@ export default function Drawer() {
                   className="cursor-pointer w-1/3 p-2 border-r-2 border-[#CCCCCC] justify-center flex items-center"
                   onClick={() => {
                     setSelectedLogs(true);
+                    setWidth("25%");
                     setSelectedCode(false);
                   }}
                 >
@@ -87,6 +90,7 @@ export default function Drawer() {
                   className="cursor-pointer w-1/3 p-2 border-r-2 border-[#CCCCCC] justify-center flex items-center"
                   onClick={() => {
                     setSelectedCode(true);
+                    setWidth("50%");
                     setSelectedLogs(false);
                   }}
                 >

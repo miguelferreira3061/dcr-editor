@@ -10,7 +10,7 @@ import Exclude from "./Exclude";
 import Milestone from "./Milestone";
 import Spawn from "./Spawn";
 
-import useStore, { RFState } from "@/store";
+import useStore, { RFState } from "@/stores/store";
 import { shallow } from "zustand/shallow";
 
 import { RelationProperties } from "./BaseRelation";

@@ -145,3 +145,22 @@ export function calcSubgraphArgs(
     height,
   };
 }
+
+export function delay(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+export function splitArray(array: string[], regex: string): string[][] {
+  let stringStringArr: string[][] = [];
+  let stringArr: string[] = [];
+  array.forEach((str) => {
+    if (str === regex) {
+      stringStringArr.push(stringArr);
+      stringArr = [];
+    } else stringArr.push(str);
+  });
+
+  if (stringArr.length > 0) stringStringArr.push(stringArr);
+
+  return stringStringArr;
+}

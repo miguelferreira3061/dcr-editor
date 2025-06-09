@@ -1,7 +1,7 @@
 import ToolPallete from "./components/tool-pallete";
 import Flow from "./Flow";
 import Drawer from "./components/drawer";
-import useStore, { RFState } from "./store";
+import useStore, { RFState } from "./stores/store";
 
 const selector = (state: RFState) => ({
   simulationFlow: state.simulationFlow,

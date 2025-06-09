@@ -15,7 +15,7 @@ import "@xyflow/react/dist/style.css";
 
 import { shallow } from "zustand/shallow";
 
-import useStore, { RFState } from "./store";
+import useStore, { RFState } from "./stores/store";
 
 import { useEffect, useRef, useState } from "react";
 
@@ -62,6 +62,7 @@ const selector = (state: RFState) => ({
   onConnect: state.onConnect,
   onPaneClick: state.onPaneClick,
   setSelectedElement: state.setSelectedElement,
+  onEdgesDelete: state.onEdgesDelete,
 });
 
 const nodeOrigin: NodeOrigin = [0.5, 0.5];
@@ -112,6 +113,7 @@ function FlowWithoutProvider() {
     onDrop,
     onConnect,
     onPaneClick,
+    onEdgesDelete,
   } = useStore(selector, shallow);
 
   const flowRef = useRef<HTMLDivElement>(null);
@@ -253,6 +255,7 @@ function FlowWithoutProvider() {
     onNodesDelete,
     onEdgesChange,
     onEdgeClick,
+    onEdgesDelete,
     onDragOver,
     onDrop: (event: any) => onDrop(event, screenToFlowPosition),
     onConnect,
@@ -281,9 +284,6 @@ function FlowWithoutProvider() {
     nextSubprocessId,
   });
   const [toCopyNodes, setToCopyNodes] = useState<Node[]>([]);
-  const [createdNodes, setCreatedNodes] = useState<
-    { id: string; copiedFrom: string }[]
-  >([]);
 
   const KeyPressListener = () => {
     useEffect(() => {
@@ -306,10 +306,10 @@ function FlowWithoutProvider() {
 
         if (event.ctrlKey && event.key.toLowerCase() === "v") {
           event.preventDefault();
-          nodes.forEach((nd) => updateNode(nd.id, { ...nd, selected: false }));
           toCopyNodes.forEach((nd) => {
-            const id = addNode({
-              ...nd,
+            const { parentId, expandParent, extent, ...rest } = nd;
+            addNode({
+              ...rest,
               id: "",
               selected: true,
               data: {
@@ -317,9 +317,8 @@ function FlowWithoutProvider() {
                 label: "",
               },
               position: { x: nd.position.x + 10, y: nd.position.y + 10 },
+              parentId: "",
             });
-
-            setCreatedNodes((prev) => [...prev, { id, copiedFrom: nd.id }]);
           });
         }
 
@@ -343,37 +342,6 @@ function FlowWithoutProvider() {
 
         if (event.ctrlKey && event.key.toLowerCase() === "v") {
           event.preventDefault();
-          createdNodes.forEach((cnd) => {
-            const nd = getNode(cnd.id);
-            const parent = nd.data.parent;
-            const children = nd.data.children as string[];
-
-            if (nd.type !== "subprocess" && nd.type !== "nest" && parent) {
-              updateNode(cnd.id, {
-                ...nd,
-                data: {
-                  ...nd.data,
-                  parent:
-                    createdNodes.find((other) => other.copiedFrom === parent)
-                      ?.id ?? "",
-                },
-              });
-            } else {
-              if (children) {
-                updateNode(cnd.id, {
-                  ...nd,
-                  data: {
-                    ...nd.data,
-                    children: children.map(
-                      (ch) =>
-                        createdNodes.find((other) => other.copiedFrom === ch)
-                          ?.id ?? ""
-                    ),
-                  },
-                });
-              }
-            }
-          });
         }
       };
 
